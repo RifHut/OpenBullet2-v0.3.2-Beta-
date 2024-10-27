@@ -23,7 +23,7 @@ namespace RuriLib.Blocks.Selenium.Browser
     public static class Methods
     {
         [Block("Opens a new selenium browser", name = "Open Browser")]
-        public static void SeleniumOpenBrowser(BotData data, string extraCmdLineArgs = @"--disable-notifications|--start-maximized|--proxy-server=102.211.59.102:8888|--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36")
+        public static void SeleniumOpenBrowser(BotData data, string extraCmdLineArgs = @"--disable-notifications|--start-maximized")
         {
             data.Logger.LogHeader();
 
