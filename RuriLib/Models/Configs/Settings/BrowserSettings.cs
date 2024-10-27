@@ -12,5 +12,6 @@ namespace RuriLib.Models.Configs.Settings
         public bool LoadOnlyDocumentAndScript { get; set; } = false;
         public bool DismissDialogs { get; set; } = false;
         public List<string> BlockedUrls { get; set; } = new();
+        public List<string> ChromeExtensions { get; set; } = new();
     }
 }
