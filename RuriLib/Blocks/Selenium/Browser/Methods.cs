@@ -12,6 +12,10 @@ using OpenQA.Selenium;
 using System.Linq;
 using System.Drawing;
 using RuriLib.Helpers;
+using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.Differencing;
+using System.IO;
+using Renci.SshNet.Common;
 
 namespace RuriLib.Blocks.Selenium.Browser
 {
@@ -19,7 +23,7 @@ namespace RuriLib.Blocks.Selenium.Browser
     public static class Methods
     {
         [Block("Opens a new selenium browser", name = "Open Browser")]
-        public static void SeleniumOpenBrowser(BotData data, string extraCmdLineArgs = "")
+        public static void SeleniumOpenBrowser(BotData data, string extraCmdLineArgs = @"--disable-notifications|--start-maximized|--proxy-server=102.211.59.102:8888|--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36")
         {
             data.Logger.LogHeader();
 
@@ -43,6 +47,12 @@ namespace RuriLib.Blocks.Selenium.Browser
                     chromeservice.HideCommandPromptWindow = true;
                     chromeservice.EnableVerboseLogging = false;
                     chromeop.AddArgument("--log-level=3");
+                    chromeop.AddArgument("--disable-blink-features=AutomationControlled");
+                    chromeop.AddArgument("--disable-popup-blocking");
+                    chromeop.AddArgument("--disable-blink-features");
+                    chromeop.AddArgument("--disable-infobars");
+                    chromeop.AddExcludedArgument("enable-automation");
+                    chromeop.AddAdditionalChromeOption("useAutomationExtension", false);
                     chromeop.BinaryLocation = provider.ChromeBinaryLocation;
 
                     if (Utils.IsDocker())
@@ -60,6 +70,12 @@ namespace RuriLib.Blocks.Selenium.Browser
                     {
                         chromeop.AddArgument("--headless");
                     }
+                    // Define the path to the directory that contains the Chrome extensions
+                    else if (data.ConfigSettings.BrowserSettings.chromeExtensions.Count >0) {
+                        chromeop.AddExtensions(data.ConfigSettings.BrowserSettings.chromeExtensions
+                                        .Where(ext => ext.EndsWith(".crx"))
+                                        .Select(ext => Directory.GetCurrentDirectory() + "\\UserData\\ChromeExtensions\\" + ext));
+                    }
 
                     if (data.ConfigSettings.BrowserSettings.DismissDialogs)
                     {
@@ -75,9 +91,18 @@ namespace RuriLib.Blocks.Selenium.Browser
                         {
                             args += ' ' + extraCmdLineArgs;
                         }
+                    
+                        // This regex will split the string by "|" unless the space is within quotes.
+                        // Case of Multipe Arguments in extraCmdLineArgs in OpenBrowser Using Selenium Ex: arg1|arg2|arg3...
+                        var argsArray = Regex.Matches(args, @"[^|]+")
+                                                 .Cast<Match>()
+                                             .Select(m => m).ToList();
+                       foreach (var match in argsArray) { 
+                       // Add the command line arguments to chrome options.
+                       chromeop.AddArguments(match.ToString());
+                       }
 
-                        chromeop.AddArgument(args);
-                    }
+            }
 
                     if (data.UseProxy)
                     {
@@ -107,6 +132,7 @@ namespace RuriLib.Blocks.Selenium.Browser
                     {
                         fireop.AddArgument("--headless");
                     }
+                    
 
                     if (data.ConfigSettings.BrowserSettings.DismissDialogs)
                     {
